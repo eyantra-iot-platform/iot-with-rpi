@@ -107,12 +107,12 @@ def update_thing_state(client, userdata, message):
 			GPIO.output(LED_PIN_3, False)
 
 	if 'device24.66' in state:
-		print("Moving servo ....")
+		print "Moving servo ..."
 		angle = message_dict['state']['device24.66']
 		servo1.set_value(angle)
 
 	if 'device24.68' in state:
-		print("Moving servo ....")
+		print "Moving servo ...."
 		angle2 = message_dict['state']['device24.68']
 		servo2.set_value(angle2)
 	
