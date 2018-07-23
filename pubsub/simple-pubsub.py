@@ -1,12 +1,17 @@
+# Documentation at: https://s3.amazonaws.com/aws-iot-device-sdk-python-docs/html/index.html
+
 import json
+import time
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
 # Thing information
-THING_ID = "25"
+THING_ID = "Testing_Thing_1"
 CLIENT_ID = "myClientID" 
 CERTIFICATE_PATH = "./certificates"
-ENDPOINT = "akbmorjah98q5.iot.ap-southeast-1.amazonaws.com"
-
+ENDPOINT = "a221a6r4ojicsi.iot.ap-southeast-1.amazonaws.com"
+DEVICE1 = 'device1.1'
+DEVICE2 = 'device1.2'
+DEVICE3 = 'device2.1'
 
 # Change to your topics here
 UPDATE_TOPIC = "$aws/things/thing" + THING_ID + "/shadow/update"
@@ -21,8 +26,8 @@ CERTIFICATE_CRT = CERTIFICATE_PATH + "/certificate.crt.pem"
 myMQTTClient = AWSIoTMQTTClient(CLIENT_ID)
 myMQTTClient.configureEndpoint(ENDPOINT, 8883)
 myMQTTClient.configureCredentials(ROOT_CA, PRIVATE_KEY, CERTIFICATE_CRT)
-# myMQTTClient.configureOfflinePublishQueueing(-1)  # Infinite offline Publish queueing
-# myMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
+myMQTTClient.configureOfflinePublishQueueing(-1)  # Infinite offline Publish queueing
+myMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
 myMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
 myMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 myMQTTClient.enableMetricsCollection()
@@ -33,17 +38,25 @@ connected = myMQTTClient.connect()
 print("Connected: ", connected)
 
 
-# Dictionaries and messages for publishing
-publish_dict = {'state': {'reported': {'device26.69': 29, 'device26.70': 12, 'device27.71': 'Hello World!'}}}
-publish_message = json.dumps(publish_dict)
-print("Message to publish: ", publish_message)
+# Generate a JSON message for publishing
+def generate_msg_to_publish():
+    publish_dict = {'state': {'reported': {DEVICE1: 29, DEVICE2: 12, DEVICE3: 'Hello World!'}}}
+    publish_message = json.dumps(publish_dict)
+    print("Message to publish: ", publish_message)
+    return publish_message
 
-def print_message(client, usrData, msg):
-    print(msg.payload)
+# Subcribe function callback
+def subscribeCallback(client, userdata, message):
+    print("Subscribe callback: ", message.payload)
+
+
 
 # Listen for state change
-myMQTTClient.subscribe(DELTA_TOPIC, 1, print_message)
+myMQTTClient.subscribe(DELTA_TOPIC, 1, subscribeCallback)
+time.sleep(2)
 
 # Update device shadow
-published = myMQTTClient.publish(UPDATE_TOPIC, publish_message, 0)
-print("Published: ", published)
+while True:
+    published = myMQTTClient.publish(UPDATE_TOPIC, generate_msg_to_publish(), 0)
+    print("Published: ", published)
+    time.sleep(5)
